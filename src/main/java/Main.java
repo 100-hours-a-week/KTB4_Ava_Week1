@@ -4,11 +4,12 @@ public class Main {
     public static Scanner sc = new Scanner(System.in);
 
     public static void main(String[] args) {
-        int select; // 선택한 서비스 번호
+        int select = 0; // 선택한 서비스 번호
         boolean retryPay; // 결제 실패 여부
 
         System.out.println("이용하실 서비스를 선택해주세요");
-        System.out.println("1. 세탁기 2. 건조기 3. 취소");
+        System.out.println("1. 세탁기 2. 건조기 | 그 외. 선택 취소");
+        System.out.print("입력: ");
         select = sc.nextInt();
 
         switch (select) {
@@ -28,11 +29,11 @@ public class Main {
                 dryer.calculateRemainingTime(); // 남은 시간 계산
                 dryer.calculatePrice(); // 요금 계산
                 do {
-                    retryPay = dryer.pay(); // 결제 로직(실패시 재시도)
+                    retryPay = !dryer.pay(); // 결제 로직(실패시 재시도)
                 } while (retryPay);
                 dryer.run(); // 건조기 실행
                 break;
-            case 3: // 취소
+            default: // 취소
                 break;
         }
     }
@@ -51,14 +52,14 @@ class Machine {
     // 요금 지불 메소드
     public boolean pay() {
         System.out.println("총 요금은 " + price + "원");
-        System.out.println("결제하실 금액을 입력해주세요: ");
+        System.out.print("결제하실 금액을 입력해주세요: ");
         money = Main.sc.nextInt();
         if (price == money) { // 요금만큼 지불
             return false;
         } else if (price < money) { // 요금보다 많이 지불
             System.out.println("잔돈 " + (money - price) + "원을 반환합니다.");
             return false;
-        } else { // 요금보다 적게 지불 (재시도)
+        } else { // 요금보다 적게 지불 (재시도 반환값 리턴)
             price -= money;
             System.out.println(price + "원 부족합니다.");
             return true;
@@ -74,14 +75,19 @@ class Machine {
 class LaundryMachine extends Machine {
     // 횟수 입력 메소드
     public int inputCount(String type) {
-        System.out.println(type + " 횟수를 입력해주세요: ");
+        System.out.print(type + " 횟수를 입력해주세요: ");
         return Main.sc.nextInt();
     }
 
-    // 기계 동작 메소드
+    // 기계 동작 메소드 (횟수 당 1초 대기)
     public void operate(String type, int count, int time) {
         while (count != 0) {
             System.out.println(type + "중 - " + (count - 1) + "회 남음");
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             remainingTime -= time;
             count -= 1;
         }
@@ -137,12 +143,21 @@ class Dryer extends LaundryMachine {
     private int dryCount; // 건조 횟수
     private int temperature; // 건조 온도
 
+    Dryer() {
+        temperature = 0;
+    }
+
     // 횟수, 온도 설정
     public void configure() {
         dryCount = inputCount("건조");
-        System.out.println("건조 온도를 선택해주세요.");
-        System.out.println("1. 저온(40°C) 2. 중온(55°C) 3. 고온(70°C)");
-        temperature = Main.sc.nextInt();
+        while (temperature >= 4 || temperature <= 0) {
+            System.out.println("건조 온도를 선택해주세요.");
+            System.out.println("1. 저온(40°C) 2. 중온(55°C) 3. 고온(70°C)");
+            System.out.print("입력: ");
+            temperature = Main.sc.nextInt();
+            if (temperature >= 4 || temperature <= 0)
+                System.out.println("1, 2, 3 중에 선택해주세요.");
+        }
     }
 
     // 남은 시간 계산 메소드
