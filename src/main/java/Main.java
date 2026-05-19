@@ -29,7 +29,7 @@ public class Main {
                 dryer.calculateRemainingTime(); // 남은 시간 계산
                 dryer.calculatePrice(); // 요금 계산
                 do {
-                    retryPay = !dryer.pay(); // 결제 로직(실패시 재시도)
+                    retryPay = dryer.pay(); // 결제 로직(실패시 재시도)
                 } while (retryPay);
                 dryer.run(); // 건조기 실행
                 break;
